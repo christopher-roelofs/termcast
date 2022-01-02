@@ -1,8 +1,8 @@
 from tinydb import TinyDB, Query
 
 
-podcast_db = TinyDB('podcast.json')
-episode_db = TinyDB('epipsode.json')
+podcast_db = TinyDB('podcast.json',  indent=4, separators=(',', ': '))
+episode_db = TinyDB('episode.json', indent=4, separators=(',', ': '))
 
 def add_podcast(podcast):
     global podcast_db
@@ -24,14 +24,20 @@ def add_episode(episode):
     global episode_db
     episodes = Query()
     if len(episode_db.search(episodes.title == episode.title)) < 1:
-        episode_db.insert({"title": episode.title,"podcast":episode.podcast, "url": episode.url,"episode": episode.episode,"duration": episode.duration,"description": episode.description,"date": episode.date})
+        episode_db.insert({"title": episode.title,"podcast":episode.podcast, "url": episode.url,"episode": episode.episode,"duration": episode.duration,"description": episode.description,"date": episode.date, "listened": episode.listened})
 
-def update_episode(episode):
-    pass
+def set_as_listened(title):
+    global episode_db
+    episodes = Query()
+    episode_db.update({"listened": True },episodes.title == title)
 
-def get_episodes(podcast):
+
+def get_episodes(podcast,filter_listened=True):
         episodes = Query()
-        return episode_db.search(episodes.podcast == podcast)
+        if filter_listened:
+            return episode_db.search((episodes.podcast == podcast) & (episodes.listened != True))
+        else:
+            return episode_db.search(episodes.podcast == podcast)
 
 def get_episode(title):
     episodes = Query()

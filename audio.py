@@ -14,6 +14,9 @@ class Player:
     def get_status(self):
         return self.status
 
+    def get_duration(self):
+        return self.player.get_time()
+
     def get_volume(self):
         volume = self.player.audio_get_volume()
         if int(volume) < 0:
@@ -24,9 +27,18 @@ class Player:
     def set_volume(self,volume):
         return self.player.audio_set_volume(volume)
 
-    def set_event_callback(self, callback):
+    def set_speed(self,speed):
+        self.player.set_rate(speed)
+
+    def get_speed(self):
+        return self.player.get
+
+    def set_end_callback(self, callback):
         events = self.player.event_manager()
         events.event_attach(vlc.EventType.MediaPlayerEndReached, callback)
+
+    def set_error_callback(self, callback):
+        events = self.player.event_manager()
         events.event_attach(vlc.EventType.MediaPlayerEncounteredError, callback)
 
     def play_audio(self, url):

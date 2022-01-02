@@ -2,6 +2,9 @@ import feedparser
 import json
 from html.parser import HTMLParser
 
+from requests.api import head
+import podcastparser
+import urllib.request
 
 
 class Podcast:
@@ -34,8 +37,34 @@ def filter_html(text):
     f.feed(text)
     return f.text
     
-
 def get_podcast(url):
+    opener = urllib.request.build_opener()
+    headers = {"User-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"}
+    request = urllib.request.Request(url, headers=headers)
+    parsed = podcastparser.parse(url,opener.open(request))
+    podcast = Podcast()
+    podcast.title = parsed["title"]
+    podcast.author = parsed["itunes_owner"]["name"]
+    podcast.feed = url
+    podcast.link = parsed["link"]
+    podcast.description = parsed["description"]
+    podcast.updated = parsed["episodes"][0]["published"]
+    for episode in parsed["episodes"]:
+        ep = Episode()
+        ep.title = episode["title"]
+        ep.podcast = parsed["title"]
+        ep.description = episode["description"]
+        ep.date = episode["published"]
+        if "number" in episode:
+            ep.episode = episode["number"]
+        for item in episode["enclosures"]:
+            if "audio" in item["mime_type"]:
+                ep.url = item["url"]
+        podcast.episodes.append(ep)
+    return podcast
+
+
+def get_podcast_old(url):
     f = feedparser.parse(url)
     #print(json.dumps(f))
     podcast = Podcast()
@@ -69,13 +98,11 @@ def get_podcast(url):
     return podcast
 
 if __name__ == "__main__":
-    import database
-    feeds = []
-
-    for feed in feeds:
-        cast = get_podcast(feed)
-        database.add_podcast(cast)
-        for episode in cast.episodes:
-            database.add_episode(episode)
-
+    url = "https://feeds.buzzsprout.com/1850247.rss"
+    url = "https://audioboom.com/channels/5060313.rss"
+    opener = urllib.request.build_opener()
+    headers = {"User-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"}
+    request = urllib.request.Request(url, headers=headers)
+    parsed = podcastparser.parse(url,opener.open(request))
+    print(json.dumps(parsed))
 
